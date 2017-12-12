@@ -8,7 +8,28 @@
 double alea_uniform_dist();
 double alea_normal_dist(const double& stddev);
 
+// fonction de calcul de moyenne
+template<typename T, typename S>
+T moyenne(S tab[], int& taille){
+    T somme(0);
+    for (int i(0);i<taille;i++){
+        somme = somme + tab[i];
+    }
+    return somme/taille;
+}
 
+// fonction de calcul de variance sans biais
+template<typename T, typename S>
+T variance( S tab[],  int& taille){
+    T variance_quad(0);
+    for (int i(0);i<taille;i++){
+        variance_quad = variance_quad + (tab[i]-moyenne<T,S>(tab, taille))*(tab[i]-moyenne<T,S>(tab, taille));
+    }
+    return variance_quad/(taille-1);
+}
+
+//*********************************************************************************************************
+//************************************************MAIN*****************************************************
 int main()
 {
 
@@ -19,15 +40,15 @@ int main()
     // 1 PARAMETERS INITIALISATION
     // Parameters of the call option that we want to price
     double S0(100); // actual price of the underlying
-    double K(100); // the strike of the call option
+    double K(110); // the strike of the call option
     double r(0.05); // risk free rate
     double T(1.0); // the maturity of the option
     double sigma(0.10); // the volatility of the underlying, for simplification we take it constant
     int N(252); // number of period per year
-    int M(1); // number of simulation;1000-1,18sec-4.3802 10000-11,649sec-4.37739; 100000-114,556
+    int M(100000); // number of simulation;1000-1,18sec-4.3802 10000-11,649sec-4.37739; 100000-114,556
     double S[N+1]; S[0] = S0;// the path of the underlying, the fist element is the actual price of the underlying
     double dt(T/N); // time step of the underlying simulation
-    double payoffs(0); //
+    double payoffs[M]; //
     double premium(0);
     double stddev(dt);
 
@@ -42,7 +63,7 @@ int main()
     std::cout << "********************************************************"<<std::endl;
 
     // 2 Payoffs simulations loop
-    for(int i(0);i<M;i++){
+    for(int j(0);j<M;j++){
 
         // 3 path simulation loop
         for(int i(0);i<N+1;i++){
@@ -50,14 +71,24 @@ int main()
         }
 
         // 4 compute the sum of payoffs of the simulations
-        payoffs = payoffs + std::max(S[N] - K,0.0);
+        payoffs[j] = std::max(S[N] - K,0.0);
     }
 
     // 5 Dicounted expected premium computation
-    premium = exp(-r*T)*(payoffs/M);
+    double moypayoff(moyenne<double,double>(payoffs,M)); // simulated payoff mean estimation
+    premium = exp(-r*T)*(moypayoff); // Actualise la moyenne des payoff pour fournir le prix
+
+    // estimation precisions details
+    double pay_stddev(0); // standard deviation of the payoffs simulated
+    pay_stddev = sqrt(variance<double,double>(payoffs,M)); // standard deviation of the payoffs simulated
 
     // print the premium value
     std::cout << "The premium of the call option is : "<<premium << std::endl;
+    std::cout << "********************************************************"<<std::endl;
+    std::cout << "THE SIMULATION DETAILS : "<<std::endl;
+    std::cout << "The payoffs mean: "<< moypayoff << std::endl;
+    std::cout << "The payoffs std_deviation : "<< pay_stddev << std::endl;
+    std::cout << "confidence interval of the mean estimation: [" << moypayoff-2*(pay_stddev/sqrt(M)) << " ; "<< moypayoff+2*(pay_stddev/sqrt(M)) << "]" << std::endl;
 
     //verifying that the program finish
     return 0; //verifying that the program finish
