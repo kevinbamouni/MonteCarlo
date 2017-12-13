@@ -45,7 +45,7 @@ int main()
     double T(1.0); // the maturity of the option
     double sigma(0.10); // the volatility of the underlying, for simplification we take it constant
     int N(252); // number of period per year
-    int M(100000); // number of simulation;1000-1,18sec-4.3802 10000-11,649sec-4.37739; 100000-114,556
+    int M(10000); // number of simulation;1000-1,18sec-4.3802 10000-11,649sec-4.37739; 100000-114,556
     double S[N+1]; S[0] = S0;// the path of the underlying, the fist element is the actual price of the underlying
     double dt(T/N); // time step of the underlying simulation
     double payoffs[M]; //
@@ -83,19 +83,19 @@ int main()
     pay_stddev = sqrt(variance<double,double>(payoffs,M)); // standard deviation of the payoffs simulated
 
     // print the premium value
-    std::cout << "The premium of the call option is : "<<premium << std::endl;
     std::cout << "********************************************************"<<std::endl;
     std::cout << "THE SIMULATION DETAILS : "<<std::endl;
     std::cout << "The payoffs mean: "<< moypayoff << std::endl;
-    std::cout << "The payoffs std_deviation : "<< pay_stddev << std::endl;
-    std::cout << "confidence interval of the mean estimation: [" << moypayoff-2*(pay_stddev/sqrt(M)) << " ; "<< moypayoff+2*(pay_stddev/sqrt(M)) << "]" << std::endl;
-    std::cout << "The confidence interval size: "<< (moypayoff+2*(pay_stddev/sqrt(M))) - (moypayoff-2*(pay_stddev/sqrt(M))) << std::endl;
+    std::cout << "The premium of the call option is : "<<premium << std::endl;
+    //std::cout << "The payoffs std_deviation : "<< pay_stddev << std::endl;
+    std::cout << "confidence interval of the mean estimation: [" << premium-2*(pay_stddev/sqrt(M)) << " ; "<< premium+2*(pay_stddev/sqrt(M)) << "]" << std::endl;
+    std::cout << "The confidence interval size: "<< (premium+2*(pay_stddev/sqrt(M))) - (premium-2*(pay_stddev/sqrt(M))) << std::endl;
 
 
     // ****************************************************************************************************************************************
-    // *************************************************** REDUCTION DE VARIANCE ************************************************************
+    // *************************************************** REDUCTION DE VARIANCE **************************************************************
 
-    // ******************************************************** 1 VARIABLE ANTITETHIC ******************************************************
+    // ***************************************************** 1 VARIABLE ANTITETHIC *************************************************************
 
     // 2 Payoffs simulations loop
     // In this loop we replace half of the payoff already simulated with the antithetic variable
@@ -113,7 +113,7 @@ int main()
 
     //double moypayoff_ant(moyenne<double,double>(payoffs,M)); // simulated payoff mean estimation with antithetic variates
     double moypayoff_rant((moyenne<double,double>(payoffs,M))); // moyenne des payoffs obtenus par variable antithétiques
-
+    premium = exp(-r*T)*(moypayoff_rant); // Actualise la moyenne des payoff pour fournir le prix
     double pay_stddev_ant(0); // standard deviation of the payoffs simulated with antithetic variates
     pay_stddev_ant = sqrt(variance<double,double>(payoffs,M)); // standard deviation of the payoffs simulated
 
@@ -121,9 +121,10 @@ int main()
     std::cout << "********************************************************"<<std::endl;
     std::cout << "THE ANTITHETIC VARIATE OPTIMISATION SIMULATION DETAILS : "<<std::endl;
     std::cout << "The payoffs mean: "<< moypayoff_rant << std::endl;
-    std::cout << "The payoffs std_deviation : "<< pay_stddev_ant << std::endl;
-    std::cout << "confidence interval of the mean estimation: [" << moypayoff_rant-2*(pay_stddev_ant/sqrt(M)) << " ; "<< moypayoff_rant+2*(pay_stddev_ant/sqrt(M)) << "]" << std::endl;
-    std::cout << "The confidence interval size: "<< (moypayoff_rant+2*(pay_stddev_ant/sqrt(M)))-(moypayoff_rant-2*(pay_stddev_ant/sqrt(M))) << std::endl;
+    std::cout << "The premium of the call option is : "<<premium << std::endl;
+    //std::cout << "The payoffs std_deviation : "<< pay_stddev_ant << std::endl;
+    std::cout << "confidence interval of the mean estimation: [" << premium-2*(pay_stddev_ant/sqrt(M)) << " ; "<< premium+2*(pay_stddev_ant/sqrt(M)) << "]" << std::endl;
+    std::cout << "The confidence interval size: "<< (premium+2*(pay_stddev_ant/sqrt(M)))-(premium-2*(pay_stddev_ant/sqrt(M))) << std::endl;
 
 
     // ****************************************************************************************************************************************
@@ -143,17 +144,17 @@ int main()
 
     double callpayoff(0);
     callpayoff = moyenne<double,double>(payoffs,M); // CALL VALUE DEDUCES FROM CALL-PUTT PARITY FORMULA
-
+    premium = exp(-r*T)*(callpayoff); // Actualise la moyenne des payoff pour fournir le prix
     double pay_stddev_varcontr(0); // standard deviation of the payoffs simulated with antithetic variates
     pay_stddev_varcontr = sqrt(variance<double,double>(payoffs,M)); // standard deviation of the payoffs simulated
 
     std::cout << "********************************************************"<<std::endl;
     std::cout << "THE CONTROL VARIATE OPTIMISATION DETAILS : "<<std::endl;
     std::cout << "The payoffs mean: "<< callpayoff << std::endl;
-    std::cout << "The payoffs std_deviation : "<< pay_stddev_varcontr << std::endl;
-    std::cout << "confidence interval of the mean estimation: [" << callpayoff-2*(pay_stddev_varcontr/sqrt(M)) << " ; "<< callpayoff+2*(pay_stddev_varcontr/sqrt(M)) << "]" << std::endl;
-    std::cout << "The confidence interval size: "<< (moypayoff_rant+2*(pay_stddev_varcontr/sqrt(M)))-(moypayoff_rant-2*(pay_stddev_varcontr/sqrt(M))) << std::endl;
-
+    std::cout << "The premium of the call option is : "<< premium << std::endl;
+    //std::cout << "The payoffs std_deviation : "<< pay_stddev_varcontr << std::endl;
+    std::cout << "confidence interval of the mean estimation: [" << premium-2*(pay_stddev_varcontr/sqrt(M)) << " ; "<< premium+2*(pay_stddev_varcontr/sqrt(M)) << "]" << std::endl;
+    std::cout << "The confidence interval size: "<< (premium+2*(pay_stddev_varcontr/sqrt(M)))-(premium-2*(pay_stddev_varcontr/sqrt(M))) << std::endl;
 
     //verifying that the program finish
     return 0; //verifying that the program finish
