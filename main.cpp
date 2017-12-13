@@ -45,7 +45,7 @@ int main()
     double T(1.0); // the maturity of the option
     double sigma(0.10); // the volatility of the underlying, for simplification we take it constant
     int N(252); // number of period per year
-    int M(1000); // number of simulation;1000-1,18sec-4.3802 10000-11,649sec-4.37739; 100000-114,556
+    int M(100000); // number of simulation;1000-1,18sec-4.3802 10000-11,649sec-4.37739; 100000-114,556
     double S[N+1]; S[0] = S0;// the path of the underlying, the fist element is the actual price of the underlying
     double dt(T/N); // time step of the underlying simulation
     double payoffs[M]; //
@@ -126,10 +126,38 @@ int main()
     std::cout << "The confidence interval size: "<< (moypayoff_rant+2*(pay_stddev_ant/sqrt(M)))-(moypayoff_rant-2*(pay_stddev_ant/sqrt(M))) << std::endl;
 
 
+    // ****************************************************************************************************************************************
+    // ******************************************************** 2 CONTROL VARIATE TECHNIQUE ******************************************************
+    // Simulation of put payoffs to valuate the call
+
+    for(int j(0);j<M;j++){
+
+        // 3 path simulation loop
+        for(int i(0);i<N+1;i++){
+        S[i+1] = S[i]*exp((r-(0.5*sigma*sigma))*dt+sigma*sqrt(dt)*alea_normal_dist(stddev));
+        }
+
+        // 4 compute the sum of payoffs of the simulations
+        payoffs[j] = exp(r*T)*S0 - K + std::max(K - S[N] ,0.0); // PUT PAYOFF
+    }
+
+    double callpayoff(0);
+    callpayoff = moyenne<double,double>(payoffs,M); // CALL VALUE DEDUCES FROM CALL-PUTT PARITY FORMULA
+
+    double pay_stddev_varcontr(0); // standard deviation of the payoffs simulated with antithetic variates
+    pay_stddev_varcontr = sqrt(variance<double,double>(payoffs,M)); // standard deviation of the payoffs simulated
+
+    std::cout << "********************************************************"<<std::endl;
+    std::cout << "THE CONTROL VARIATE OPTIMISATION DETAILS : "<<std::endl;
+    std::cout << "The payoffs mean: "<< callpayoff << std::endl;
+    std::cout << "The payoffs std_deviation : "<< pay_stddev_varcontr << std::endl;
+    std::cout << "confidence interval of the mean estimation: [" << callpayoff-2*(pay_stddev_varcontr/sqrt(M)) << " ; "<< callpayoff+2*(pay_stddev_varcontr/sqrt(M)) << "]" << std::endl;
+    std::cout << "The confidence interval size: "<< (moypayoff_rant+2*(pay_stddev_varcontr/sqrt(M)))-(moypayoff_rant-2*(pay_stddev_varcontr/sqrt(M))) << std::endl;
+
+
     //verifying that the program finish
     return 0; //verifying that the program finish
 }
-
 
 // fonctions code
 
