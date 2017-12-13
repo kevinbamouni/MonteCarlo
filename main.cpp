@@ -45,7 +45,7 @@ int main()
     double T(1.0); // the maturity of the option
     double sigma(0.10); // the volatility of the underlying, for simplification we take it constant
     int N(252); // number of period per year
-    int M(100); // number of simulation;1000-1,18sec-4.3802 10000-11,649sec-4.37739; 100000-114,556
+    int M(1000); // number of simulation;1000-1,18sec-4.3802 10000-11,649sec-4.37739; 100000-114,556
     double S[N+1]; S[0] = S0;// the path of the underlying, the fist element is the actual price of the underlying
     double dt(T/N); // time step of the underlying simulation
     double payoffs[M]; //
@@ -100,7 +100,7 @@ int main()
     // 2 Payoffs simulations loop
     // In this loop we replace half of the payoff already simulated with the antithetic variable
 
-    for(int j(M/2);j<M;j++){
+    for(int j(0);j<M;j++){
 
         // 3 path simulation loop
         for(int i(0);i<N+1;i++){
@@ -108,7 +108,7 @@ int main()
         }
 
         // 4 compute the sum of payoffs of the simulations
-        payoffs[j] = std::max(S[N] - K,0.0);
+        payoffs[j] =  (payoffs[j] + std::max(S[N] - K,0.0))/2;
     }
 
     //double moypayoff_ant(moyenne<double,double>(payoffs,M)); // simulated payoff mean estimation with antithetic variates
@@ -124,7 +124,6 @@ int main()
     std::cout << "The payoffs std_deviation : "<< pay_stddev_ant << std::endl;
     std::cout << "confidence interval of the mean estimation: [" << moypayoff_rant-2*(pay_stddev_ant/sqrt(M)) << " ; "<< moypayoff_rant+2*(pay_stddev_ant/sqrt(M)) << "]" << std::endl;
     std::cout << "The confidence interval size: "<< (moypayoff_rant+2*(pay_stddev_ant/sqrt(M)))-(moypayoff_rant-2*(pay_stddev_ant/sqrt(M))) << std::endl;
-
 
 
     //verifying that the program finish
