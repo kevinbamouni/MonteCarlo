@@ -61,6 +61,8 @@ int main()
     std::cout << "sigma = " << sigma <<std::endl;
     std::cout << "Monte carlo number of simulations = " << M <<std::endl;
     std::cout << "********************************************************"<<std::endl;
+    std::cout << "REAL CALL PREMIUM COMPUTE WITH B&S: 6,80495 " <<std::endl;
+    std::cout << "********************************************************"<<std::endl;
 
     // 2 Payoffs simulations loop
     for(int j(0);j<M;j++){
