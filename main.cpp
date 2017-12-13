@@ -40,17 +40,17 @@ int main()
     // 1 PARAMETERS INITIALISATION
     // Parameters of the call option that we want to price
     double S0(100); // actual price of the underlying
-    double K(110); // the strike of the call option
+    double K(100); // the strike of the call option
     double r(0.05); // risk free rate
     double T(1.0); // the maturity of the option
     double sigma(0.10); // the volatility of the underlying, for simplification we take it constant
     int N(252); // number of period per year
-    int M(100000); // number of simulation;1000-1,18sec-4.3802 10000-11,649sec-4.37739; 100000-114,556
+    int M(100); // number of simulation;1000-1,18sec-4.3802 10000-11,649sec-4.37739; 100000-114,556
     double S[N+1]; S[0] = S0;// the path of the underlying, the fist element is the actual price of the underlying
     double dt(T/N); // time step of the underlying simulation
     double payoffs[M]; //
     double premium(0);
-    double stddev(dt);
+    double stddev(1.0);
 
     // print Input parameters
     std::cout << "THE CALL PARAMETERS :"<<std::endl;
@@ -89,6 +89,43 @@ int main()
     std::cout << "The payoffs mean: "<< moypayoff << std::endl;
     std::cout << "The payoffs std_deviation : "<< pay_stddev << std::endl;
     std::cout << "confidence interval of the mean estimation: [" << moypayoff-2*(pay_stddev/sqrt(M)) << " ; "<< moypayoff+2*(pay_stddev/sqrt(M)) << "]" << std::endl;
+    std::cout << "The confidence interval size: "<< (moypayoff+2*(pay_stddev/sqrt(M))) - (moypayoff-2*(pay_stddev/sqrt(M))) << std::endl;
+
+
+    // ****************************************************************************************************************************************
+    // *************************************************** REDUCTION DE VARIANCE ************************************************************
+
+    // ******************************************************** 1 VARIABLE ANTITETHIC ******************************************************
+
+    // 2 Payoffs simulations loop
+    // In this loop we replace half of the payoff already simulated with the antithetic variable
+
+    for(int j(M/2);j<M;j++){
+
+        // 3 path simulation loop
+        for(int i(0);i<N+1;i++){
+        S[i+1] = S[i]*exp((r-(0.5*sigma*sigma))*dt+sigma*sqrt(dt)*-alea_normal_dist(stddev)); // sim with antitethic variate -X of X
+        }
+
+        // 4 compute the sum of payoffs of the simulations
+        payoffs[j] = std::max(S[N] - K,0.0);
+    }
+
+    //double moypayoff_ant(moyenne<double,double>(payoffs,M)); // simulated payoff mean estimation with antithetic variates
+    double moypayoff_rant((moyenne<double,double>(payoffs,M))); // moyenne des payoffs obtenus par variable antithétiques
+
+    double pay_stddev_ant(0); // standard deviation of the payoffs simulated with antithetic variates
+    pay_stddev_ant = sqrt(variance<double,double>(payoffs,M)); // standard deviation of the payoffs simulated
+
+    // print the premium value
+    std::cout << "********************************************************"<<std::endl;
+    std::cout << "THE ANTITHETIC VARIATE OPTIMISATION SIMULATION DETAILS : "<<std::endl;
+    std::cout << "The payoffs mean: "<< moypayoff_rant << std::endl;
+    std::cout << "The payoffs std_deviation : "<< pay_stddev_ant << std::endl;
+    std::cout << "confidence interval of the mean estimation: [" << moypayoff_rant-2*(pay_stddev_ant/sqrt(M)) << " ; "<< moypayoff_rant+2*(pay_stddev_ant/sqrt(M)) << "]" << std::endl;
+    std::cout << "The confidence interval size: "<< (moypayoff_rant+2*(pay_stddev_ant/sqrt(M)))-(moypayoff_rant-2*(pay_stddev_ant/sqrt(M))) << std::endl;
+
+
 
     //verifying that the program finish
     return 0; //verifying that the program finish
